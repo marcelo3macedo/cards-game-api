@@ -1,0 +1,28 @@
+{
+  "name": "tcg-game-api",
+  "version": "1.0.0",
+  "main": "app.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "build": "echo 'Para projetos Node.js puros, o build geralmente consiste em copiar arquivos ou transpilar TS. Para JS puro, garantimos dependências de produção.'",
+    "prod": "NODE_ENV=production node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "API de Cartas TCG com Clean Architecture",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "mysql2": "^3.16.2",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.13",
+    "nodemon": "^3.1.11"
+  }
+}
