@@ -4,8 +4,9 @@
   "main": "app.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
+    "start": "node  app.js",
+    "debug": "nodemon --inspect=0.0.0.0:9229 app.js",
+    "dev": "nodemon --inspect=0.0.0.0:9229 app.js",
     "build": "echo 'Para projetos Node.js puros, o build geralmente consiste em copiar arquivos ou transpilar TS. Para JS puro, garantimos dependências de produção.'",
     "prod": "NODE_ENV=production node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"

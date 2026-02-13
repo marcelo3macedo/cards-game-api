@@ -65,7 +65,8 @@ class VillainTurn {
 				actions.push({
 					type: 'attack',
 					data: {
-						monster: null
+						attacker: attacker.card,
+						target: null
 					}
 				});
             } else {
@@ -123,9 +124,12 @@ class VillainTurn {
             state.status = "win";
         }
 
-		// 4. FINALIZAR TURNO
+		state.player.field.forEach(card => {
+			card.canAttack = true;
+		});
 		state.currentTurnOwner = "player";
 		state.turn += 1;
+		state.player.canSummon = true;
 
 		BattleStorage.save(userId, state);
 		const baseState = this.formatStateForClient(state);

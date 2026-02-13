@@ -1,17 +1,47 @@
+const BattleStorage = require("../../../infrastructure/cache/BattleStorage");
+
 class RegisterBattle {
-	constructor(battleRepository, userRepository) {
+	constructor(battleRepository, deckRepository, villainRepository) {
 		this.battleRepository = battleRepository;
-		this.userRepository = userRepository;
+		this.deckRepository = deckRepository;
+		this.villainRepository = villainRepository;
 	}
 
-	async execute(battleData) {
-		// 1. Salva o histórico
+	async execute(userId) {
+		const state = BattleStorage.get(userId);
+		if (!state) return;
+
+		const status  = state.player.hp > state.opponent.hp ? "victory" : "lose";
+		const stars = 2;
+		const cardsAcquired = status === "victory"
+			? await this.deckRepository.drawRandomCards(state.opponent.id, stars)
+			: [];
+
+		const battleData = {
+			userId,
+			villainId: state.opponent.id,
+			status,
+			stars,
+			cardsAcquired
+		}
+
 		const history = await this.battleRepository.create(battleData);
+		const villain = await this.villainRepository.findById(state.opponent.id);
 
-		// 2. Se venceu, poderíamos atualizar o level/points do usuário aqui
-		// Ex: if (battleData.status === 'victory') { ... }
+		if (cardsAcquired.length > 0) {
+			for (const card of cardsAcquired) {
+				await deckRepository.insertCard({
+					userId,
+					cardId: card.id,
+					type: "library",
+				});
+			}
+		}
 
-		return history;
+		return {
+			history,
+			villain
+		};
 	}
 }
 

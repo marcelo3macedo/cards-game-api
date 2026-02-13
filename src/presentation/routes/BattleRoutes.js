@@ -1,12 +1,16 @@
 const { Router } = require("express");
 const SequelizeBattleRepository = require("../../infrastructure/repositories/SequelizeBattleRepository");
 const RegisterBattle = require("../../core/use-cases/battle/RegisterBattle");
+const authMiddleware = require("../../middleware/authMiddleware");
+const SequelizeDeckRepository = require("../../infrastructure/repositories/SequelizeDeckRepository");
+const SequelizeVillainRepository = require("../../infrastructure/repositories/SequelizeVillainRepository");
 
 const router = Router();
 const battleRepository = new SequelizeBattleRepository();
+const deckRepository = new SequelizeDeckRepository();
+const villainRepository = new SequelizeVillainRepository();
 
-// GET - Histórico de um usuário
-router.get("/user/:userId", async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
 	try {
 		const history = await battleRepository.findByUserId(req.params.userId);
 		res.json(history);
@@ -15,11 +19,10 @@ router.get("/user/:userId", async (req, res) => {
 	}
 });
 
-// POST - Registrar nova batalha
-router.post("/", async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
 	try {
-		const useCase = new RegisterBattle(battleRepository);
-		const result = await useCase.execute(req.body);
+		const useCase = new RegisterBattle(battleRepository, deckRepository, villainRepository);
+		const result = await useCase.execute(req.user.id);
 		res.status(201).json(result);
 	} catch (error) {
 		res.status(400).json({ error: error.message });

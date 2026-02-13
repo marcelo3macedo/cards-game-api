@@ -9,7 +9,6 @@ const SequelizeUserRepository = require("../../infrastructure/repositories/Seque
 const SequelizeVillainRepository = require("../../infrastructure/repositories/SequelizeVillainRepository");
 const SequelizeDeckRepository = require("../../infrastructure/repositories/SequelizeDeckRepository");
 const authMiddleware = require("../../middleware/authMiddleware");
-const GetUserByToken = require("../../core/use-cases/user/GetUserByToken");
 
 const userRepo = new SequelizeUserRepository();
 const villainRepo = new SequelizeVillainRepository();
@@ -69,7 +68,6 @@ router.post("/summon", authMiddleware, async (req, res) => {
 	}
 });
 
-// POST /battle-engine/attack { userId, attackerIdx, targetIdx (null para direto) }
 router.post("/attack", authMiddleware, async (req, res) => {
 	try {
 		const { attackerIdx, targetIdx } = req.body;

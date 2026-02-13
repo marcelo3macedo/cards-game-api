@@ -34,6 +34,7 @@ class StartBattle {
                 field: [],
                 graveyard: [],
                 deck: shuffledPlayerDeck,
+				canSummon: true
             },
             opponent: {
                 id: villain.id,
@@ -58,7 +59,8 @@ class StartBattle {
 				hand: [],
 				deckCount: battleState.player.deck.length,
 				field: [],
-				graveyard: []
+				graveyard: [],
+				canSummon: battleState.player.canSummon
 			},
 			opponent: {
 				id: battleState.opponent.id,

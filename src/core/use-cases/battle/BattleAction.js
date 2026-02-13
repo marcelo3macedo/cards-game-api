@@ -28,11 +28,14 @@ class BattleAction {
 	summon(userId, handIndex, position) {
 		const state = this.getState(userId);
 		const p = state.player;
+		const canAttack = state.turn > 0;
 
 		if (!p.hand[handIndex]) throw new Error("Card not found in hand.");
 
 		const card = p.hand.splice(handIndex, 1)[0];
-		p.field.push({ card, position, canAttack: false });
+		p.field.push({ card, position, canAttack });
+
+		state.player.canSummon = false;
 
 		BattleStorage.save(userId, state);
         return this.formatStateForClient(state);
@@ -85,6 +88,7 @@ class BattleAction {
 				opponent.graveyard.push(opponent.field.splice(targetIdx, 1)[0].card);
 				opponent.hp -= diff;
 				message = `Target destroyed! Opponent took ${diff} damage.`;
+				state.player.field[attackerIdx].canAttack = false;
 			} else if (diff < 0) {
 				// Defensor vence (Atacante se dá mal)
 				player.graveyard.push(player.field.splice(attackerIdx, 1)[0].card);
@@ -118,13 +122,11 @@ class BattleAction {
 	nextTurn(userId) {
 		const state = this.getState(userId);
 
-		// Alterna entre 'player' e 'opponent'
 		state.currentTurnOwner =
 			state.currentTurnOwner === "player" ? "opponent" : "player";
 
 		if (state.currentTurnOwner === "player") {
 			state.turn += 1;
-			// Reseta permissão de ataque para monstros no campo
 			state.player.field.forEach((m) => (m.canAttack = true));
 		}
 

@@ -16,9 +16,23 @@ class SequelizeDeckRepository {
         });
     }
 
+    async insertCard({ userId, cardId, type = "library" }) {
+        return await DeckModel.create({
+        userId,
+        cardId,
+        type,
+        });
+    }
+
 	async shuffleMainDeck(userId) {
         const deck = await this.findByUserAndType(userId, "main");
         return this._shuffle(deck);
+    }
+
+    async drawRandomCards(userId, cardNumber) {
+        const deck = await this.findByVillain(userId);
+        const shuffled = this._shuffle([...deck]);
+        return shuffled.slice(0, cardNumber);
     }
 
     _shuffle(array) {
