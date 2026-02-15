@@ -28,7 +28,7 @@ class BattleAction {
 	summon(userId, handIndex, position) {
 		const state = this.getState(userId);
 		const p = state.player;
-		const canAttack = state.turn > 0;
+		const canAttack = state.turn > 1;
 
 		if (!p.hand[handIndex]) throw new Error("Card not found in hand.");
 
@@ -41,7 +41,7 @@ class BattleAction {
         return this.formatStateForClient(state);
 	}
 
-	changePosition(userId, fieldIndex) {
+	changePosition(userId, fieldIndex, position) {
 		const state = this.getState(userId);
 		const p = state.player;
 
@@ -50,7 +50,7 @@ class BattleAction {
 		const monster = p.field[fieldIndex];
 		if (!monster) throw new Error("Monster not found on field.");
 
-		monster.position = monster.position === "attack" ? "defense" : "attack";
+		monster.position = position;
 
 		BattleStorage.save(userId, state);
 		return this.formatStateForClient(state);
@@ -80,6 +80,14 @@ class BattleAction {
 		// ATAQUE A MONSTRO
 		const target = opponent.field[targetIdx];
 		let message = "";
+
+		// --- LÓGICA DE REVELAÇÃO (FLIP) ---
+		const wasFaceDown = target.position.includes("face-down");
+		if (wasFaceDown) {
+			// Converte: face-down-attack -> attack | face-down-defense -> defense
+			target.position = target.position.replace("face-down-", "");
+			message = `Revealed! The hidden monster was ${target.card.name}. `;
+		}
 
 		if (target.position === "attack") {
 			const diff = attacker.card.attackPower - target.card.attackPower;

@@ -43,14 +43,14 @@ router.post("/draw", authMiddleware, async (req, res) => {
 
 router.post("/change-position", authMiddleware, async (req, res) => {
     try {
-        const { fieldIndex } = req.body;
+        const { fieldIndex, position } = req.body;
         const action = new BattleAction();
 
         if (fieldIndex === undefined) {
             return res.status(400).json({ error: "fieldIndex is required" });
         }
 
-        const newState = action.changePosition(req.user.id, fieldIndex);
+        const newState = action.changePosition(req.user.id, fieldIndex, position);
         res.json(newState);
     } catch (error) {
         res.status(400).json({ error: error.message });

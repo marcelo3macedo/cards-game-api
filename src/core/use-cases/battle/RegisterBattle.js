@@ -30,7 +30,7 @@ class RegisterBattle {
 
 		if (cardsAcquired.length > 0) {
 			for (const card of cardsAcquired) {
-				await deckRepository.insertCard({
+				await this.deckRepository.insertCard({
 					userId,
 					cardId: card.id,
 					type: "library",
