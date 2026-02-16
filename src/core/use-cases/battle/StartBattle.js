@@ -32,6 +32,7 @@ class StartBattle {
                 hp: 8000,
                 hand: [],
                 field: [],
+				spells: [],
                 graveyard: [],
                 deck: shuffledPlayerDeck,
 				canSummon: true
@@ -42,6 +43,7 @@ class StartBattle {
                 hp: 8000,
                 hand: [],
                 field: [],
+				spells: [],
                 graveyard: [],
                 deck: shuffledVillainDeck,
             },
@@ -59,6 +61,7 @@ class StartBattle {
 				hand: [],
 				deckCount: battleState.player.deck.length,
 				field: [],
+				spells: [],
 				graveyard: [],
 				canSummon: battleState.player.canSummon
 			},
@@ -69,6 +72,7 @@ class StartBattle {
 				handCount: 0,
 				deckCount: battleState.opponent.deck.length,
 				field: [],
+				spells: [],
 				graveyard: []
 			},
 			turn: battleState.turn,

@@ -1,4 +1,5 @@
 const BattleStorage = require("../../../infrastructure/cache/BattleStorage");
+const EffectRegistry = require("./EffectRegistry");
 
 class BattleAction {
 	getState(userId) {
@@ -176,6 +177,44 @@ class BattleAction {
                 hand: undefined,
             }
         };
+    }
+
+	async prepareEffect(playerId, cardIndex, origin, executor) {
+        const state = await this.getState(playerId);
+		const exec = executor === "player" ? state.player : state.opponent;
+        const card = origin === "hand"
+			? exec.hand[cardIndex]
+			: exec.spells[cardIndex];
+
+	    const effectPlugin = EffectRegistry.getEffect(card.effectScript);
+
+        if (!effectPlugin) {
+            return { status: "SUCCESS", action: "SIMPLE_SUMMON" };
+        }
+
+        const result = effectPlugin.prepare({ state, card });
+
+		if (result.removeCard) {
+			const targetArray = origin === "hand" ? exec.hand : exec.spells;
+
+			if (cardIndex !== -1 && targetArray[cardIndex]) {
+				targetArray.splice(cardIndex, 1);
+			}
+		}
+
+        if (result.status !== "WAITING_SELECTION") {
+			BattleStorage.save(playerId, result.state);
+			return result.state;
+		}
+
+		state.pendingAction = {
+			cardHandIndex: cardIndex,
+			effectId: card.id,
+			targetType: result.targetType
+		};
+		BattleStorage.save(playerId, state);
+
+        return state;
     }
 }
 

@@ -13,7 +13,7 @@ const battleEngineRoutes = require("./src/presentation/routes/BattleEngineRoutes
 const app = express();
 
 app.use(cors({
-    origin: "https://card-game.professoraantenada.com.br",
+    origin: ["https://card-game.professoraantenada.com.br", "http://localhost:6006"] ,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
@@ -28,6 +28,16 @@ app.use("/villains", villainRoutes);
 app.use("/decks", deckRoutes);
 app.use("/battles", battleRoutes);
 app.use("/battle-engine", battleEngineRoutes);
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+
+    const statusCode = err.status || 500;
+
+    res.status(statusCode).json({
+        error: err.message || "Erro interno do servidor"
+    });
+});
 
 const PORT = process.env.PORT || 3000;
 

@@ -8,7 +8,8 @@ const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    return res.status(401).json({ error: "Token não fornecido." });
+    res.status(401).json({ error: "Token não fornecido." });
+    next();
   }
 
   const parts = authHeader.split(" ");
@@ -21,7 +22,8 @@ const authMiddleware = async (req, res, next) => {
   }
 
   if (!token) {
-    return res.status(401).json({ error: "Token inválido ou mal formatado." });
+    res.status(401).json({ error: "Token inválido ou mal formatado." });
+    next();
   }
 
   try {
