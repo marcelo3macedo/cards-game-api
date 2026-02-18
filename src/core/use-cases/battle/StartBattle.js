@@ -1,4 +1,6 @@
 const BattleStorage = require("../../../infrastructure/cache/BattleStorage");
+const { createInitialState } = require("../../domain/entities/BattleState");
+const { toClientState } = require("../../domain/services/BattleViewMapper");
 
 class StartBattle {
 	constructor(userRepo, villainRepo, deckRepo) {
@@ -9,78 +11,31 @@ class StartBattle {
 
 	async execute(user, villainId) {
 		const villain = await this.villainRepo.findById(villainId);
-
-		const playerDeckRaw = await this.deckRepo.findByUserAndType(user.id, "main");
+		const playerDeckRaw = await this.deckRepo.findByUserMain(user.id);
         const villainDeckRaw = await this.deckRepo.findByVillain(villainId);
 
-		if (!user || !villain || playerDeckRaw.length < 5 || villainDeckRaw.length < 5) {
-            throw new Error("Missing data to start battle (User, Villain or valid Decks).");
-        }
+		this._validate(user, villain, playerDeckRaw, villainDeckRaw);
 
-		const shuffledPlayerDeck = playerDeckRaw
-            .sort(() => Math.random() - 0.5)
-            .map((d) => d.card);
-
-        const shuffledVillainDeck = villainDeckRaw
-            .sort(() => Math.random() - 0.5)
-            .map((d) => d.card);
-
-		const battleState = {
-            player: {
-                id: user.id,
-                name: user.name,
-                hp: 8000,
-                hand: [],
-                field: [],
-				spells: [],
-                graveyard: [],
-                deck: shuffledPlayerDeck,
-				canSummon: true
-            },
-            opponent: {
-                id: villain.id,
-                name: villain.name,
-                hp: 8000,
-                hand: [],
-                field: [],
-				spells: [],
-                graveyard: [],
-                deck: shuffledVillainDeck,
-            },
-            turn: 1,
-            currentTurnOwner: "player",
-        };
+		const playerDeck = this._shuffle(playerDeckRaw);
+        const villainDeck = this._shuffle(villainDeckRaw);
+		const battleState = createInitialState(user, villain, playerDeck, villainDeck);
 
         BattleStorage.save(user.id, battleState);
 
-		const clientBattleState = {
-			player: {
-				id: battleState.player.id,
-				name: battleState.player.name,
-				hp: battleState.player.hp,
-				hand: [],
-				deckCount: battleState.player.deck.length,
-				field: [],
-				spells: [],
-				graveyard: [],
-				canSummon: battleState.player.canSummon
-			},
-			opponent: {
-				id: battleState.opponent.id,
-				name: battleState.opponent.name,
-				hp: battleState.opponent.hp,
-				handCount: 0,
-				deckCount: battleState.opponent.deck.length,
-				field: [],
-				spells: [],
-				graveyard: []
-			},
-			turn: battleState.turn,
-			currentTurnOwner: battleState.currentTurnOwner,
-		};
-
-        return clientBattleState;
+        return toClientState(battleState);
 	}
+
+	_validate(user, villain, pDeck, vDeck) {
+        if (!user || !villain || pDeck.length < 5 || vDeck.length < 5) {
+            throw new Error("Missing data to start battle (User, Villain or valid Decks).");
+        }
+    }
+
+    _shuffle(deckRaw) {
+        return deckRaw
+            .sort(() => Math.random() - 0.5)
+            .map((d) => d.card);
+    }
 }
 
 module.exports = StartBattle;

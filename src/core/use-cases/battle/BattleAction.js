@@ -1,30 +1,18 @@
 const BattleStorage = require("../../../infrastructure/cache/BattleStorage");
+const { prepareCombatant } = require("../../../utils/battleUtils");
 const EffectRegistry = require("./EffectRegistry");
 
 class BattleAction {
+	/**
+     * @param {string} userId
+     * @returns {import("src/core/types/BattleType").BattleState}
+     */
 	getState(userId) {
 		const state = BattleStorage.get(userId);
+
 		if (!state) throw new Error("No active battle found for this user.");
 		return state;
 	}
-
-	draw(userId, count = 1) {
-        const state = BattleStorage.get(userId);
-        if (!state) throw new Error("Battle not found.");
-
-        const p = state.player;
-
-        for (let i = 0; i < count; i++) {
-            if (p.deck.length === 0) break;
-
-            const card = p.deck.pop();
-            p.hand.push(card);
-        }
-
-        BattleStorage.save(userId, state);
-
-        return this.formatStateForClient(state);
-    }
 
 	summon(userId, handIndex, position) {
 		const state = this.getState(userId);
@@ -59,18 +47,17 @@ class BattleAction {
 
 	attack(userId, attackerIdx, targetIdx = null) {
 		const state = this.getState(userId);
-		const { player, opponent } = state;
+		const { player, opponent, environment } = state;
 
 		if (state.currentTurnOwner !== "player") throw new Error("Not your turn!");
 
-		const attacker = player.field[attackerIdx];
+		const attacker = prepareCombatant(player.field[attackerIdx], environment);
 		if (!attacker || attacker.position !== "attack") {
 			throw new Error("Invalid attacker or monster in defense mode.");
 		}
 
-		// ATAQUE DIRETO (Se o oponente não tem monstros)
 		if (targetIdx === null || opponent.field.length === 0) {
-			const damage = attacker.card.attackPower;
+			const damage = attacker.actualAtk;
 			opponent.hp -= damage;
 
 			this._checkWinCondition(state);
@@ -78,40 +65,33 @@ class BattleAction {
 			return { message: `Direct attack! ${damage} damage.`, state };
 		}
 
-		// ATAQUE A MONSTRO
-		const target = opponent.field[targetIdx];
+		const target = prepareCombatant(opponent.field[targetIdx], environment);
 		let message = "";
 
-		// --- LÓGICA DE REVELAÇÃO (FLIP) ---
 		const wasFaceDown = target.position.includes("face-down");
 		if (wasFaceDown) {
-			// Converte: face-down-attack -> attack | face-down-defense -> defense
 			target.position = target.position.replace("face-down-", "");
 			message = `Revealed! The hidden monster was ${target.card.name}. `;
 		}
 
 		if (target.position === "attack") {
-			const diff = attacker.card.attackPower - target.card.attackPower;
+			const diff = attacker.actualAtk - target.actualAtk;
 			if (diff > 0) {
-				// Atacante vence
 				opponent.graveyard.push(opponent.field.splice(targetIdx, 1)[0].card);
 				opponent.hp -= diff;
 				message = `Target destroyed! Opponent took ${diff} damage.`;
 				state.player.field[attackerIdx].canAttack = false;
 			} else if (diff < 0) {
-				// Defensor vence (Atacante se dá mal)
 				player.graveyard.push(player.field.splice(attackerIdx, 1)[0].card);
 				player.hp -= Math.abs(diff);
 				message = `Your monster was weaker! You took ${Math.abs(diff)} damage.`;
 			} else {
-				// Empate (Ambos destruídos)
 				player.graveyard.push(player.field.splice(attackerIdx, 1)[0].card);
 				opponent.graveyard.push(opponent.field.splice(targetIdx, 1)[0].card);
 				message = "Both monsters destroyed!";
 			}
 		} else {
-			// Alvo em DEFESA
-			const diff = attacker.card.attackPower - target.card.defensePower;
+			const diff = attacker.actualAtk - target.actualDef;
 			if (diff > 0) {
 				opponent.graveyard.push(opponent.field.splice(targetIdx, 1)[0].card);
 				message = "Defense breached! Monster destroyed.";
@@ -127,7 +107,6 @@ class BattleAction {
 		return { message, state: baseState };
 	}
 
-	// 2. TROCAR TURNO
 	nextTurn(userId) {
 		const state = this.getState(userId);
 
@@ -143,7 +122,6 @@ class BattleAction {
         return this.formatStateForClient(state);
 	}
 
-	// 3. VERIFICAR VITÓRIA
 	_checkWinCondition(state) {
 		if (state.opponent.hp <= 0) {
 			state.status = "victory";
@@ -154,7 +132,6 @@ class BattleAction {
 		}
 	}
 
-	// 4. ENCERRAR E LIMPAR MEMÓRIA
 	finish(userId) {
 		const state = this.getState(userId);
 		BattleStorage.delete(userId);

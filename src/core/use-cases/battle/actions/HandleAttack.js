@@ -1,0 +1,143 @@
+const AttackRules = require("#core/services/rules/AttackRules");
+const BattleStorage = require("#infrastructure/cache/BattleStorage");
+const { prepareCombatant, formatStateForClient } = require("#utils/battleUtils");
+
+class HandleAttack {
+    execute(userId, targetSelector, attackerIdx, targetIdx) {
+        const state = BattleStorage.get(userId);
+		const { environment } = state;
+
+		if (state.currentTurnOwner !== targetSelector) throw new Error("Not your turn!");
+
+        const actor = targetSelector === 'player' ? state.player : state.opponent;
+        const enemy = targetSelector === 'player' ? state.opponent : state.player;
+
+		const attacker = prepareCombatant(actor.field[attackerIdx], environment);
+        if (!attacker || attacker.position !== "attack") {
+			throw new Error("Invalid attacker or monster in defense mode.");
+		}
+
+        const { allowed, state: newState, logs, actions } = AttackRules.applyModifiers(state, targetSelector);
+        if (!allowed) {
+            BattleStorage.save(userId, newState);
+            const clientState =  formatStateForClient(newState);
+            return { success: true, state: clientState, logs, actions };
+        }
+
+		if (targetIdx === null || enemy.field.length === 0) {
+            const { logs, actions } = this._handleDirectAttack(attacker, enemy);
+            return { success: true, state, logs, actions };
+        }
+
+        const target = prepareCombatant(enemy.field[targetIdx], environment);
+        const result = this._handleMonsterBattle(actor, enemy, attacker, target, attackerIdx, targetIdx);
+
+        return { success: true, state, logs: result.logs, actions: result.actions };
+    }
+
+    _handleDirectAttack(attacker, enemy) {
+        const damage = attacker.actualAtk;
+        enemy.hp -= damage;
+
+        return {
+            logs: [
+                `Ataque direto! ${damage} de danos.`
+            ],
+            actions: [
+                {
+                    type: 'direct_hit',
+                    attacker
+                }
+            ]
+        };
+    }
+
+    _handleMonsterBattle(actor, enemy, attacker, target, attackerIdx, targetIdx) {
+        let logs = [];
+        let actions = [];
+
+        if (target.position.includes("face-down")) {
+            target.position = target.position.replace("face-down-", "");
+            logs.push(`Revealed! The hidden monster was ${target.card.name}. `);
+            actions.push({
+                type: 'reveal',
+                target
+            })
+        }
+
+        if (target.position === "attack") {
+            return this._calculateAtkVsAtk(actor, enemy, attacker, target, logs, actions, attackerIdx, targetIdx);
+        } else {
+            return this._calculateAtkVsDef(actor, enemy, attacker, target, logs, actions, targetIdx);
+        }
+    }
+
+    _calculateAtkVsAtk(actor, enemy, attacker, target, logs, actions, attackerIdx, targetIdx) {
+        const diff = attacker.actualAtk - target.actualAtk;
+
+        if (diff > 0) {
+            const destroyed = enemy.field.splice(targetIdx, 1)[0];
+            enemy.graveyard.push(destroyed.card);
+            enemy.hp -= diff;
+            logs.push(`Target destroyed! Opponent took ${diff} damage.`)
+
+            return {
+                logs
+            };
+        }
+
+        if (diff < 0) {
+            const destroyed = actor.field.splice(attackerIdx, 1)[0];
+            actor.graveyard.push(destroyed.card);
+            actor.hp -= Math.abs(diff);
+            logs.push(`Your monster was weaker! You took ${Math.abs(diff)} damage.`)
+
+            return {
+                logs
+            };
+        }
+
+        actor.graveyard.push(actor.field.splice(attackerIdx, 1)[0].card);
+        enemy.graveyard.push(enemy.field.splice(targetIdx, 1)[0].card);
+        logs.push(`Both monsters destroyed!`);
+
+        actions.push({
+            type: 'battle',
+            attacker,
+            target
+        });
+
+        return {
+            logs
+        };
+    }
+
+    _calculateAtkVsDef(actor, enemy, attacker, target, logs, actions, targetIdx) {
+        const diff = attacker.actualAtk - target.actualDef;
+
+        if (diff > 0) {
+            const destroyed = enemy.field.splice(targetIdx, 1)[0];
+            enemy.graveyard.push(destroyed.card);
+            logs.push(`Defense breached! Monster destroyed.`)
+
+            return {
+                logs
+            };
+        }
+
+        actor.hp -= Math.abs(diff);
+        logs.push(`Attack failed! Defense is too strong.`);
+
+        actions.push({
+            type: 'battle',
+            attacker,
+            target
+        });
+
+        return {
+            logs
+        };
+    }
+}
+
+module.exports = HandleAttack;

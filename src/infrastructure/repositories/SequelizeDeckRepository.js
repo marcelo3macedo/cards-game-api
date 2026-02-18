@@ -9,6 +9,13 @@ class SequelizeDeckRepository {
 		});
 	}
 
+    async findByUserMain(userId) {
+		return await DeckModel.findAll({
+			where: { userId, type: "main" },
+			include: [{ model: CardModel, as: "card" }],
+		});
+	}
+
 	async findByVillain(villainId) {
         return await DeckModel.findAll({
             where: { villainId },

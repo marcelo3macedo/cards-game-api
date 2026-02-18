@@ -1,4 +1,3 @@
-// Singleton para manter as batalhas ativas na memória do Node
 const activeBattles = new Map();
 
 module.exports = {

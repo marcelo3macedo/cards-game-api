@@ -1,4 +1,5 @@
 const BattleStorage = require("../../../infrastructure/cache/BattleStorage");
+const { prepareCombatant } = require("../../../utils/battleUtils");
 
 class VillainTurn {
 	async execute(userId) {
@@ -7,11 +8,10 @@ class VillainTurn {
 			throw new Error("Não é o turno do vilão ou batalha não encontrada.");
 		}
 
-		const { opponent, player } = state;
+		const { opponent, player, environment } = state;
 		const logs = [];
 		const actions = [];
 
-		// --- 1. Fase de Compra (Inalterada) ---
 		if (state.turn === 1) {
 			for (let i = 0; i < 5; i++) {
 				if (opponent.deck.length > 0) opponent.hand.push(opponent.deck.pop());
@@ -22,14 +22,11 @@ class VillainTurn {
 			logs.push(`${opponent.name} comprou uma carta.`);
 		}
 
-		// --- 2. Fase de Invocação (IA decide o modo) ---
 		if (opponent.hand.length > 0 && opponent.field.length < 5) {
 			const monsterIndex = this._getBestMonsterIndex(opponent.hand);
 			if (monsterIndex !== -1) {
 				const monster = opponent.hand.splice(monsterIndex, 1)[0];
 
-				// Lógica simples de IA: Se HP baixo, invoca em defesa virada para baixo
-				// Caso contrário, ataca.
 				const shouldSetHidden = opponent.hp < 1000 || monster.attackPower < 1000;
 				const position = shouldSetHidden ? "face-down-defense" : "attack";
 
@@ -48,32 +45,27 @@ class VillainTurn {
 			}
 		}
 
-		// --- 3. Fase de Combate ---
 		for (let i = 0; i < opponent.field.length; i++) {
-			const attacker = opponent.field[i];
+			const attacker = prepareCombatant(opponent.field[i], environment);
 			if (!attacker.canAttack || attacker.position !== "attack") continue;
 
 			if (player.field.length === 0) {
-				// Ataque Direto
-				player.hp -= attacker.card.attackPower;
-				logs.push(`${attacker.card.name} atacou diretamente! Dano: ${attacker.card.attackPower}`);
+				player.hp -= attacker.actualAtk;
+				logs.push(`${attacker.card.name} atacou diretamente! Dano: ${attacker.actualAtk}`);
 				actions.push({ type: 'attack', data: { attacker: attacker.card, target: null } });
 			} else {
-				// IA escolhe um alvo (pode ser um face-down aleatório)
 				const targetIdx = this._getBestTarget(attacker, player.field);
 				if (targetIdx !== -1) {
-					const target = player.field[targetIdx];
+					const target = prepareCombatant(player.field[targetIdx], environment);
 					const isFaceDown = target.position.includes("face-down");
 
-					// Revelar a carta se estiver virada para baixo
 					if (isFaceDown) {
 						target.position = target.position === "face-down-attack" ? "attack" : "defense";
 						logs.push(`A carta virada para baixo era ${target.card.name}!`);
 					}
 
-					// Cálculo de Batalha
 					if (target.position === "attack") {
-						const diff = attacker.card.attackPower - target.card.attackPower;
+						const diff = attacker.actualAtk - target.actualAtk;
 						if (diff > 0) {
 							player.graveyard.push(player.field.splice(targetIdx, 1)[0].card);
 							player.hp -= diff;
@@ -87,8 +79,7 @@ class VillainTurn {
 							logs.push(`Ataque simultâneo! Ambos destruídos.`);
 						}
 					} else {
-						// Modo de Defesa
-						const diff = attacker.card.attackPower - target.card.defensePower;
+						const diff = attacker.actualAtk - target.actualDef;
 						if (diff > 0) {
 							player.graveyard.push(player.field.splice(targetIdx, 1)[0].card);
 							logs.push(`${attacker.card.name} destruiu a defesa de ${target.card.name}.`);
@@ -103,7 +94,6 @@ class VillainTurn {
 			}
 		}
 
-		// --- 4. Finalização do Turno ---
 		if (player.hp <= 0) state.status = "lose";
 		if (opponent.hp <= 0) state.status = "win";
 
