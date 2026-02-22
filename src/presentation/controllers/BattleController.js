@@ -1,15 +1,19 @@
+const { toClientState } = require("#core/domain/services/BattleViewMapper");
 const DrawCard = require("#core/use-cases/battle/actions/DrawCard");
+const RegisterBattle = require("#core/use-cases/battle/RegisterBattle");
 const StartBattle = require("#core/use-cases/battle/StartBattle");
 const StartMockBattle = require("#core/use-cases/battle/StartMockBattle");
-const SequelizeCardRepository = require("#infrastructure/repositories/SequelizeCardRepository");
+const SequelizeBattleRepository = require("#infrastructure/repositories/SequelizeBattleRepository");
 const SequelizeDeckRepository = require("#infrastructure/repositories/SequelizeDeckRepository");
 const SequelizeUserRepository = require("#infrastructure/repositories/SequelizeUserRepository");
+const SequelizeVillainRepository = require("#infrastructure/repositories/SequelizeVillainRepository");
 
 class BattleController {
 	constructor() {
 		this.userRepo = new SequelizeUserRepository();
-		this.villainRepo = new SequelizeCardRepository();
+		this.villainRepo = new SequelizeVillainRepository();
 		this.deckRepo = new SequelizeDeckRepository();
+        this.battleRepo = new SequelizeBattleRepository();
 	}
 
 	async start(req, res) {
@@ -18,9 +22,15 @@ class BattleController {
             await useCase.execute(req.user, req.body.villainId);
 
             const action = new DrawCard();
-            const stateWithHand = action.initialDraw(req.user.id);
+            const { success, drawnCount, state, logs, actions } = action.initialDraw(req.user.id, "player");
 
-            res.status(201).json(stateWithHand);
+            res.status(201).json({
+                success,
+                drawnCount,
+                state: toClientState(state),
+                logs,
+                actions
+            });
 		} catch (error) {
 			res.status(500).json({ error: error.message });
 		}
@@ -42,6 +52,25 @@ class BattleController {
             message: "Mock battle saved",
             battleState
         });
+    }
+
+    async create(req, res) {
+        try {
+            const useCase = new RegisterBattle(this.battleRepo, this.deckRepo, this.villainRepo);
+            const result = await useCase.execute(req.user.id);
+            res.status(201).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async recover(req, res) {
+        try {
+            const history = await this.battleRepo.findByUserId(req.user.id);
+            res.json(history);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
     }
 }
 

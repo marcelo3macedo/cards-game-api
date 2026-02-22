@@ -1,6 +1,6 @@
 const AttackRules = require("#core/services/rules/AttackRules");
 const BattleStorage = require("#infrastructure/cache/BattleStorage");
-const { prepareCombatant, formatStateForClient } = require("#utils/battleUtils");
+const { prepareCombatant } = require("#utils/battleUtils");
 
 class HandleAttack {
     execute(userId, targetSelector, attackerIdx, targetIdx) {
@@ -20,8 +20,7 @@ class HandleAttack {
         const { allowed, state: newState, logs, actions } = AttackRules.applyModifiers(state, targetSelector);
         if (!allowed) {
             BattleStorage.save(userId, newState);
-            const clientState =  formatStateForClient(newState);
-            return { success: true, state: clientState, logs, actions };
+            return { success: true, state: newState, logs, actions };
         }
 
 		if (targetIdx === null || enemy.field.length === 0) {

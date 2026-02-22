@@ -1,3 +1,4 @@
+const { toClientState } = require("#core/domain/services/BattleViewMapper");
 const BattleAction = require("#core/use-cases/battle/BattleAction");
 const VillainTurn = require("#core/use-cases/battle/VillainTurn");
 
@@ -8,13 +9,14 @@ class EndTurnController {
       action.nextTurn(req.user.id);
 
       const villainAI = new VillainTurn();
-      const result = await villainAI.execute(req.user.id);
+      const { success, drawnCount, state, logs, actions } = await villainAI.execute(req.user.id);
 
       res.json({
-          message: "Turno do jogador finalizado. Vilão jogou.",
-          logs: result.logs,
-          actions: result.actions,
-          state: result.state,
+          success,
+          drawnCount,
+          state: toClientState(state),
+          logs,
+          actions
       });
     } catch (error) {
       res.status(400).json({ error: error.message });

@@ -161,7 +161,7 @@ class BattleAction {
 		const exec = executor === "player" ? state.player : state.opponent;
         const card = origin === "hand"
 			? exec.hand[cardIndex]
-			: exec.spells[cardIndex];
+			: exec.spells[cardIndex].card;
 
 	    const effectPlugin = EffectRegistry.getEffect(card.effectScript);
 
@@ -191,7 +191,7 @@ class BattleAction {
 		};
 		BattleStorage.save(playerId, state);
 
-        return state;
+        return { success: true, state, logs: result.logs, actions: result.actions };
     }
 }
 

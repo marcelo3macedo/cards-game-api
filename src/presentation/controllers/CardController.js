@@ -47,14 +47,14 @@ class CardController {
 
 	async confirmSelection(req, res) {
 		try {
-			const { handIndex, effectType, target } = req.body;
+			//const { handIndex, effectType, target } = req.body;
 
-			const action = new BattleAction();
-			const result = action.executeEffect(req.user.id, {
+			//const action = new BattleAction();
+			const result = []/*action.executeEffect(req.user.id, {
 				handIndex,
 				effectType,
 				target
-			});
+			});*/
 
 			res.json(result);
 		} catch (error) {

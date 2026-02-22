@@ -1,12 +1,19 @@
-const DrawCard = require("../../core/use-cases/battle/actions/DrawCard");
+const { toClientState } = require("#core/domain/services/BattleViewMapper");
+const DrawCard = require("#core/use-cases/battle/actions/DrawCard");
 
 class DrawController {
   async handleDraw(req, res) {
     try {
       const useCase = new DrawCard();
-      const newState = await useCase.execute(req.user.id, "player");
+      const { success, drawnCount, state, logs, actions } = await useCase.execute(req.user.id, "player");
 
-      res.json(newState);
+      res.json({
+        success,
+        drawnCount,
+        state: toClientState(state),
+        logs,
+        actions
+      });
     } catch (error) {
       res.status(400).json({ error: error.message });
     }

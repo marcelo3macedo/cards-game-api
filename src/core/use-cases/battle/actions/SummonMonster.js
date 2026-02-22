@@ -1,6 +1,6 @@
 const SummonRules = require('#core/services/rules/SummonRules');
 const BattleStorage = require('#infrastructure/cache/BattleStorage');
-const { formatStateForClient, prepareCombatant } = require('#utils/battleUtils');
+const { prepareCombatant } = require('#utils/battleUtils');
 
 /**
  * @typedef {import('../../../types/BattleType').BattleState} BattleState
@@ -19,10 +19,10 @@ class SummonMonster {
 
         if (!actor.hand[handIndex]) throw new Error("Card not found in hand.");
 
-        const { allowed, state: newState } = SummonRules.applySummonModifiers(state, targetSelector);
+        const { allowed, state: newState, logs, actions } = SummonRules.applySummonModifiers(state, targetSelector);
         if (!allowed) {
             BattleStorage.save(userId, newState);
-            return formatStateForClient(newState);
+            return { success: true, state: newState, logs, actions };
         }
 
 		const card = actor.hand.splice(handIndex, 1)[0];
@@ -38,7 +38,7 @@ class SummonMonster {
         actor.canSummon = false;
 
         BattleStorage.save(userId, newState);
-        return formatStateForClient(newState);
+        return { success: true, state: newState, logs, actions };
     }
 }
 

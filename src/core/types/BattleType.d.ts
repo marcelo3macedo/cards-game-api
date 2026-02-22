@@ -58,6 +58,11 @@ export interface BattleState {
     };
     turn: number;
     currentTurnOwner: 'player' | 'opponent';
+    pendingAction?: {
+        cardHandIndex: number;
+        effectId: string;
+        targetType: string;
+    };
 }
 
 export interface Player {

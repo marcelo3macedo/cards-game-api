@@ -23,6 +23,7 @@ class DrawCard {
             if (actor.deck.length === 0) break;
             actor.hand.push(actor.deck.pop());
             drawnCount++;
+            actor.handCount = drawnCount;
         }
 
         BattleStorage.save(userId, state);
