@@ -17,17 +17,16 @@ class DrawCard {
         const { newValue, logs, actions } = DrawRules.applyQuantityModifiers(state, count, targetSelector);
 
         const actor = targetSelector === 'player' ? state.player : state.opponent;
-        let drawnCount = 0;
 
         for (let i = 0; i < newValue; i++) {
             if (actor.deck.length === 0) break;
             actor.hand.push(actor.deck.pop());
-            drawnCount++;
-            actor.handCount = drawnCount;
         }
 
+        actor.handCount = actor.hand.length;
+
         BattleStorage.save(userId, state);
-        return { success: true, drawnCount, state, logs, actions };
+        return { success: true, drawnCount: actor.hand.length, state, logs, actions };
     }
 
     initialDraw(userId, targetSelector) {

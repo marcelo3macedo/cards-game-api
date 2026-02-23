@@ -15,12 +15,14 @@ const toClientState = (battleState) => {
     return {
         player: {
             ...playerData,
-            deckCount: battleState.player.deck.length
+            hp: battleState.player.hp < 0 ? 0 : battleState.player.hp,
+            deckCount: battleState.player.deck?.length || 0
         },
         opponent: {
             ...opponentData,
-            handCount: battleState.opponent.hand.length,
-            deckCount: battleState.opponent.deck.length
+            hp: battleState.opponent.hp < 0 ? 0 : battleState.opponent.hp,
+            handCount: battleState.opponent.handCount || battleState.opponent.hand?.length || 0,
+            deckCount: battleState.opponent.deck?.length || 0
         },
         environment: battleState.environment,
         turn: battleState.turn,

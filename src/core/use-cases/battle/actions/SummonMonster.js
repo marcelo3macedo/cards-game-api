@@ -12,7 +12,7 @@ class SummonMonster {
      * @param {number} handIndex
      * @param {string} position
      */
-    execute(userId, targetSelector, handIndex, position) {
+    execute(userId, targetSelector, handIndex, position, selectedFieldIndex) {
         const state = BattleStorage.get(userId);
         const actor = targetSelector === 'player' ? state.player : state.opponent;
 		const canAttack = state.turn > 1;
@@ -34,7 +34,7 @@ class SummonMonster {
         };
         const preparedSlot = prepareCombatant(fieldSlot, newState.environment || state);
 
-		actor.field.push(preparedSlot);
+		actor.field[selectedFieldIndex || 0] = preparedSlot;
         actor.canSummon = false;
 
         BattleStorage.save(userId, newState);

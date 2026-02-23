@@ -9,8 +9,6 @@ class VillainTurn {
 			throw new Error("Não é o turno do vilão ou batalha não encontrada.");
 		}
 
-		state = VillainTurnEngine.updatedTurn({ state });
-
 		const drawResult = await VillainTurnEngine.drawPhrase({ userId, state });
 		state = drawResult.state;
         allActions.push(...drawResult.actions);

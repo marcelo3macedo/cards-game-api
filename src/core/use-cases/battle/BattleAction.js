@@ -113,13 +113,12 @@ class BattleAction {
 		state.currentTurnOwner =
 			state.currentTurnOwner === "player" ? "opponent" : "player";
 
-		if (state.currentTurnOwner === "player") {
-			state.turn += 1;
-			state.player.field.forEach((m) => (m.canAttack = true));
-		}
+		state.turn += 1;
+		state.player.field.forEach((m) => {
+			if (m) m.canAttack = true;
+		});
 
 		BattleStorage.save(userId, state);
-        return this.formatStateForClient(state);
 	}
 
 	_checkWinCondition(state) {

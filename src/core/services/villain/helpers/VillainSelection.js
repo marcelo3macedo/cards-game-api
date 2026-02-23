@@ -27,7 +27,7 @@ class VillainSelection {
     }
 
     getBestMonsterPosition(state, monster) {
-        const playerField = state.player.field || [];
+        const playerField = (state.player.field || []).filter(item => item !== null);
 
         const canDestroySomething = playerField.length === 0 || playerField.some(fieldItem => {
             const targetCard = fieldItem.card;
@@ -64,6 +64,8 @@ class VillainSelection {
 		const hiddenTargets = [];
 
 		playerField.forEach((target, idx) => {
+            if (!target) return;
+
 			const isFaceDown = target.position.includes("face-down");
 
 			if (!isFaceDown) {
@@ -95,6 +97,25 @@ class VillainSelection {
 
 		return bestTargetIdx;
 	}
+
+    getBestFieldIndex(field) {
+        const emptySlotIndex = field.findIndex(slot => slot === null);
+        if (emptySlotIndex !== -1) {
+            return emptySlotIndex;
+        }
+
+        let lowestAttack = Infinity;
+        let bestIndex = 0;
+
+        field.forEach((slot, index) => {
+            if (slot && slot.card && slot.card.attackPower < lowestAttack) {
+                lowestAttack = slot.card.attackPower;
+                bestIndex = index;
+            }
+        });
+
+        return bestIndex;
+    }
 }
 
 module.exports = new VillainSelection();

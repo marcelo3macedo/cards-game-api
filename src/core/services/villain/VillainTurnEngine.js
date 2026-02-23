@@ -30,17 +30,19 @@ class VillainTurnEngine {
             }
         }
 
+        const monsterToSummon = state.opponent.hand[bestMonsterIndex];
         const position = VillainSelection.getBestMonsterPosition(state, state.opponent.hand[bestMonsterIndex]);
         const useCase = new SummonMonster();
-        const { state: newState, actions } = await useCase.execute(userId, "opponent", bestMonsterIndex, position);
+        const selectedFieldIndex = VillainSelection.getBestFieldIndex(state.opponent.field);
+        const { state: newState, actions } = await useCase.execute(userId, "opponent", bestMonsterIndex, position, selectedFieldIndex);
 
         actions.push({
             type: 'summon',
             data: {
-                card: state.opponent.hand[bestMonsterIndex],
+                card: monsterToSummon,
                 position: position,
                 canAttack: true,
-                index: newState.opponent.field.length - 1
+                index: selectedFieldIndex
             },
             handCount: newState.opponent.handCount
         })
@@ -59,10 +61,15 @@ class VillainTurnEngine {
 
         const { opponent, environment, player } = state;
         for (let i = 0; i < opponent.field.length; i++) {
+            const slot = opponent.field[i];
+            if (!slot) continue;
+
 			const attacker = prepareCombatant(opponent.field[i], environment);
 			if (!attacker.canAttack || attacker.position !== "attack") continue;
 
-            if (player.field.length === 0) {
+            const activeTargets = player.field.filter(fieldItem => fieldItem !== null);
+
+            if (activeTargets.length === 0) {
                 const directAttack = handleAttack.execute(userId, "opponent", i, null);
 
                 currentState = directAttack.state;
@@ -90,7 +97,16 @@ class VillainTurnEngine {
     }
 
     passTurnToPlayer({ state }) {
-        state.player.field.forEach(c => c.canAttack = true);
+        state.player.field.forEach(slot => {
+            if (slot) {
+                slot.canAttack = true;
+            }
+        });
+        state.opponent.field.forEach(slot => {
+            if (slot) {
+                slot.canAttack = true;
+            }
+        });
         state.player.canSummon = true;
         state.currentTurnOwner = "player";
 

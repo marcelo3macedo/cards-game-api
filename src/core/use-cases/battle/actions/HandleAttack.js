@@ -17,6 +17,7 @@ class HandleAttack {
 			throw new Error("Invalid attacker or monster in defense mode.");
 		}
 
+        actor.field[attackerIdx].canAttack = false;
         const { allowed, state: newState, logs, actions } = AttackRules.applyModifiers(state, targetSelector);
         if (!allowed) {
             BattleStorage.save(userId, newState);
@@ -44,8 +45,11 @@ class HandleAttack {
             ],
             actions: [
                 {
-                    type: 'direct_hit',
-                    attacker
+                    type: 'attack',
+                    data: {
+                        attacker: attacker.card,
+                        target: null
+                    }
                 }
             ]
         };
@@ -60,9 +64,19 @@ class HandleAttack {
             logs.push(`Revealed! The hidden monster was ${target.card.name}. `);
             actions.push({
                 type: 'reveal',
-                target
+                target,
+                targetIdx
             })
         }
+
+        actions.push({
+            type: 'attack',
+            data: {
+                attacker: attacker.card,
+                target: target.card,
+                position: target.position
+            }
+        });
 
         if (target.position === "attack") {
             return this._calculateAtkVsAtk(actor, enemy, attacker, target, logs, actions, attackerIdx, targetIdx);
@@ -73,68 +87,71 @@ class HandleAttack {
 
     _calculateAtkVsAtk(actor, enemy, attacker, target, logs, actions, attackerIdx, targetIdx) {
         const diff = attacker.actualAtk - target.actualAtk;
-
         if (diff > 0) {
-            const destroyed = enemy.field.splice(targetIdx, 1)[0];
+            const destroyed = enemy.field[targetIdx];
             enemy.graveyard.push(destroyed.card);
+            enemy.field[targetIdx] = null;
             enemy.hp -= diff;
             logs.push(`Target destroyed! Opponent took ${diff} damage.`)
 
             return {
-                logs
+                logs,
+                actions
             };
         }
 
         if (diff < 0) {
-            const destroyed = actor.field.splice(attackerIdx, 1)[0];
+            const destroyed = actor.field[attackerIdx];
             actor.graveyard.push(destroyed.card);
+
+            actor.field[attackerIdx] = null;
             actor.hp -= Math.abs(diff);
             logs.push(`Your monster was weaker! You took ${Math.abs(diff)} damage.`)
 
             return {
-                logs
+                logs,
+                actions
             };
         }
 
-        actor.graveyard.push(actor.field.splice(attackerIdx, 1)[0].card);
-        enemy.graveyard.push(enemy.field.splice(targetIdx, 1)[0].card);
+        const destroyedActor = actor.field[attackerIdx];
+        const destroyedEnemy = enemy.field[targetIdx];
+
+        actor.graveyard.push(destroyedActor.card);
+        enemy.graveyard.push(destroyedEnemy.card);
+
+        actor.field[attackerIdx] = null;
+        enemy.field[targetIdx] = null;
+
         logs.push(`Both monsters destroyed!`);
 
-        actions.push({
-            type: 'battle',
-            attacker,
-            target
-        });
-
         return {
-            logs
+            logs,
+            actions
         };
     }
 
     _calculateAtkVsDef(actor, enemy, attacker, target, logs, actions, targetIdx) {
         const diff = attacker.actualAtk - target.actualDef;
-
         if (diff > 0) {
-            const destroyed = enemy.field.splice(targetIdx, 1)[0];
+            const destroyed = enemy.field[targetIdx];
             enemy.graveyard.push(destroyed.card);
+            enemy.field[targetIdx] = null;
+
             logs.push(`Defense breached! Monster destroyed.`)
 
             return {
-                logs
+                logs,
+                actions
             };
         }
 
         actor.hp -= Math.abs(diff);
         logs.push(`Attack failed! Defense is too strong.`);
 
-        actions.push({
-            type: 'battle',
-            attacker,
-            target
-        });
-
         return {
-            logs
+            logs,
+            actions
         };
     }
 }
