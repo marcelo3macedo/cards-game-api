@@ -14,7 +14,7 @@ const battleEngineRoutes = require("./src/presentation/routes/BattleEngineRoutes
 const app = express();
 
 app.use(cors({
-    origin: ["https://card-game.professoraantenada.com.br", "http://localhost:6006"] ,
+    origin: ["https://card-game.professoraantenada.com.br", "http://localhost:6006", "https://cardgame.alemdoscript.com.br"] ,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
