@@ -24,9 +24,15 @@ class HandleAttack {
             return { success: true, state: newState, logs, actions };
         }
 
-		if (targetIdx === null || enemy.field.length === 0) {
+        const validEnemies = enemy.field.filter(item => item !== null);
+		if (targetIdx === null || validEnemies.length === 0) {
             const { logs, actions } = this._handleDirectAttack(attacker, enemy);
             return { success: true, state, logs, actions };
+        }
+
+        if (!enemy.field[targetIdx]) {
+            actor.field[attackerIdx].canAttack = true;
+            return { success: true, state, logs: [], actions: [] };
         }
 
         const target = prepareCombatant(enemy.field[targetIdx], environment);

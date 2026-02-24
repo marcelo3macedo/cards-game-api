@@ -29,10 +29,10 @@ class RegisterBattle {
 		const villain = await this.villainRepository.findById(state.opponent.id);
 
 		if (cardsAcquired.length > 0) {
-			for (const card of cardsAcquired) {
+			for (const item of cardsAcquired) {
 				await this.deckRepository.insertCard({
 					userId,
-					cardId: card.id,
+					cardId: item.cardId,
 					type: "library",
 				});
 			}

@@ -5,8 +5,8 @@ module.exports = {
 
         state.opponent.graveyard.push(...state.opponent.field, ...state.opponent.spells);
 
-        state.opponent.field = [];
-        state.opponent.spells = [];
+        state.opponent.field = [ null, null, null, null, null ];
+        state.opponent.spells = [ null, null, null, null, null ];
 
         return {
             status: "SUCCESS",
