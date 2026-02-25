@@ -29,6 +29,9 @@ const Card = sequelize.define(
 			type: DataTypes.STRING,
 			allowNull: false,
 		},
+		monsterRarity: {
+			type: DataTypes.STRING,
+		},
 		attribute: {
 			type: DataTypes.STRING,
 			allowNull: false,

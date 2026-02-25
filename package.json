@@ -4,10 +4,10 @@
   "main": "app.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node  app.js",
+    "start": "node app.js",
     "debug": "nodemon --inspect=0.0.0.0:9229 app.js",
     "dev": "nodemon --inspect=0.0.0.0:9229 app.js",
-    "build": "echo 'Para projetos Node.js puros, o build geralmente consiste em copiar arquivos ou transpilar TS. Para JS puro, garantimos dependências de produção.'",
+    "build": "echo \"Projeto Node.js puro — sem etapa de build.\"",
     "prod": "NODE_ENV=production node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,10 +15,18 @@
   "author": "",
   "license": "ISC",
   "description": "API de Cartas TCG com Clean Architecture",
+  "_moduleAliases": {
+    "#core": "src/core",
+    "#presentation": "src/presentation",
+    "#infrastructure": "src/infrastructure",
+    "#shared": "src/shared",
+    "#utils": "src/utils"
+  },
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "module-alias": "^2.3.4",
     "mysql2": "^3.16.2",
     "sequelize": "^6.37.7"
   },

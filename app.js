@@ -1,3 +1,4 @@
+require("module-alias/register");
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -13,7 +14,7 @@ const battleEngineRoutes = require("./src/presentation/routes/BattleEngineRoutes
 const app = express();
 
 app.use(cors({
-    origin: "https://card-game.professoraantenada.com.br",
+    origin: ["https://card-game.professoraantenada.com.br", "http://localhost:6006", "https://cardgame.alemdoscript.com.br"] ,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
@@ -29,12 +30,22 @@ app.use("/decks", deckRoutes);
 app.use("/battles", battleRoutes);
 app.use("/battle-engine", battleEngineRoutes);
 
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+
+    const statusCode = err.status || 500;
+
+    res.status(statusCode).json({
+        error: err.message || "Erro interno do servidor"
+    });
+});
+
 const PORT = process.env.PORT || 3000;
 
 sequelize
 	.authenticate()
 	.then(() => {
-		console.log("✅ Conectado ao MySQL (192.168.1.200)");
+		console.log(`✅ Conectado ao MySQL (${process.env.DB_HOST})`);
 		return sequelize.sync();
 	})
 	.then(() => {

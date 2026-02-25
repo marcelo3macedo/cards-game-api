@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2020",
+    "checkJs": true,
+    "baseUrl": ".",
+    "paths": {
+      "#core/*": ["src/core/*"],
+      "#presentation/*": ["src/presentation/*"],
+      "#infrastructure/*": ["src/infrastructure/*"],
+      "#shared/*": ["src/shared/*"],
+      "#utils/*": ["src/utils/*"]
+    }
+  },
+  "include": ["src/**/*"]
+}

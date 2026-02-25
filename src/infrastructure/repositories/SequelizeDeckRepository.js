@@ -9,6 +9,20 @@ class SequelizeDeckRepository {
 		});
 	}
 
+    async findByUserMain(userId) {
+		return await DeckModel.findAll({
+			where: { userId, type: "main" },
+			include: [{ model: CardModel, as: "card" }],
+		});
+	}
+
+    async findInitial() {
+		return await DeckModel.findAll({
+			where: { type: "initial" },
+			include: [{ model: CardModel, as: "card" }],
+		});
+	}
+
 	async findByVillain(villainId) {
         return await DeckModel.findAll({
             where: { villainId },
@@ -18,10 +32,26 @@ class SequelizeDeckRepository {
 
     async insertCard({ userId, cardId, type = "library" }) {
         return await DeckModel.create({
-        userId,
-        cardId,
-        type,
+            userId,
+            cardId,
+            type,
         });
+    }
+
+    async createMainDeck(userId) {
+        const initialDecks = await this.findInitial();
+
+        const newCards = initialDecks.map(deck => {
+            const rawDeck = deck.get({ plain: true });
+
+            return {
+                userId: userId,
+                cardId: rawDeck.cardId,
+                type: "main"
+            };
+        });
+
+        return await DeckModel.bulkCreate(newCards);
     }
 
 	async shuffleMainDeck(userId) {
