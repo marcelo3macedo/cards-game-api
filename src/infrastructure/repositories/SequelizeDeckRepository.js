@@ -65,6 +65,14 @@ class SequelizeDeckRepository {
         return shuffled.slice(0, cardNumber);
     }
 
+    async updateMainDeck(userId, cardIds) {
+        await DeckModel.destroy({ where: { userId, type: "main" } });
+        if (cardIds.length > 0) {
+            const rows = cardIds.map(cardId => ({ userId, cardId, type: "main" }));
+            await DeckModel.bulkCreate(rows);
+        }
+    }
+
     _shuffle(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
