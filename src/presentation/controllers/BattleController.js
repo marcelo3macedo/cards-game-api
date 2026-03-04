@@ -5,6 +5,7 @@ const StartBattle = require("#core/use-cases/battle/StartBattle");
 const StartMockBattle = require("#core/use-cases/battle/StartMockBattle");
 const SequelizeBattleRepository = require("#infrastructure/repositories/SequelizeBattleRepository");
 const SequelizeDeckRepository = require("#infrastructure/repositories/SequelizeDeckRepository");
+const SequelizePackageRepository = require("#infrastructure/repositories/SequelizePackageRepository");
 const SequelizeUserRepository = require("#infrastructure/repositories/SequelizeUserRepository");
 const SequelizeVillainRepository = require("#infrastructure/repositories/SequelizeVillainRepository");
 
@@ -13,7 +14,8 @@ class BattleController {
 		this.userRepo = new SequelizeUserRepository();
 		this.villainRepo = new SequelizeVillainRepository();
 		this.deckRepo = new SequelizeDeckRepository();
-        this.battleRepo = new SequelizeBattleRepository();
+		this.battleRepo = new SequelizeBattleRepository();
+		this.packageRepo = new SequelizePackageRepository();
 	}
 
 	async start(req, res) {
@@ -54,15 +56,15 @@ class BattleController {
         });
     }
 
-    async create(req, res) {
-        try {
-            const useCase = new RegisterBattle(this.battleRepo, this.deckRepo, this.villainRepo);
-            const result = await useCase.execute(req.user.id);
-            res.status(201).json(result);
-        } catch (error) {
-            res.status(400).json({ error: error.message });
-        }
-    }
+	async create(req, res) {
+		try {
+			const useCase = new RegisterBattle(this.battleRepo, this.deckRepo, this.villainRepo, this.packageRepo);
+			const result = await useCase.execute(req.user.id);
+			res.status(201).json(result);
+		} catch (error) {
+			res.status(400).json({ error: error.message });
+		}
+	}
 
     async recover(req, res) {
         try {

@@ -2,6 +2,7 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../sequelize");
 const User = require("./User");
 const Villain = require("./Villain");
+const Package = require("./Package");
 
 const BattleHistory = sequelize.define(
 	"BattleHistory",
@@ -29,13 +30,13 @@ const BattleHistory = sequelize.define(
 		},
 		stars: {
 			type: DataTypes.INTEGER,
-			defaultValue: 0, // Quantidade de estrelas ganhas na luta
+			defaultValue: 0,
 		},
-		// Armazena um array de IDs das cartas ganhas: [1, 5, 10]
-		cardsAcquired: {
-			type: DataTypes.JSON,
+		// Pacote de cartas recebido como premiação (apenas em vitória)
+		packageId: {
+			type: DataTypes.INTEGER,
 			allowNull: true,
-			defaultValue: [],
+			references: { model: Package, key: "id" },
 		},
 	},
 	{
@@ -45,8 +46,8 @@ const BattleHistory = sequelize.define(
 	},
 );
 
-// Relacionamentos para facilitar o GET
 BattleHistory.belongsTo(User, { foreignKey: "userId", as: "user" });
 BattleHistory.belongsTo(Villain, { foreignKey: "villainId", as: "villain" });
+BattleHistory.belongsTo(Package, { foreignKey: "packageId", as: "package" });
 
 module.exports = BattleHistory;
