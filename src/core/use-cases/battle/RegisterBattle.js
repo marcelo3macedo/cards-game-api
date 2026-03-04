@@ -1,11 +1,14 @@
 const BattleStorage = require("../../../infrastructure/cache/BattleStorage");
 
+const COINS_PER_VICTORY = 50;
+
 class RegisterBattle {
-	constructor(battleRepository, deckRepository, villainRepository, packageRepository) {
+	constructor(battleRepository, deckRepository, villainRepository, packageRepository, userRepository) {
 		this.battleRepository = battleRepository;
 		this.deckRepository = deckRepository;
 		this.villainRepository = villainRepository;
 		this.packageRepository = packageRepository;
+		this.userRepository = userRepository;
 	}
 
 	async execute(userId) {
@@ -16,9 +19,10 @@ class RegisterBattle {
 		const stars = status === "victory" ? 2 : 0;
 
 		let reward = null;
+		let drawnCards = [];
 
 		if (status === "victory") {
-			const drawnCards = await this.deckRepository.drawRandomCards(state.opponent.id, stars);
+			drawnCards = await this.deckRepository.drawRandomCards(state.opponent.id, stars);
 			const cardIds = drawnCards.map((entry) => entry.cardId);
 
 			reward = await this.packageRepository.create({
@@ -45,10 +49,17 @@ class RegisterBattle {
 		const history = await this.battleRepository.create(battleData);
 		const villain = await this.villainRepository.findById(state.opponent.id);
 
+		if (status === "victory") {
+			await this.userRepository.addCoins(userId, COINS_PER_VICTORY);
+		}
+
 		return {
 			history,
 			villain,
-			package: reward,
+			package: reward ? {
+				...reward.toJSON(),
+				cardsData: drawnCards.map(entry => entry.get({ plain: true })),
+			} : null,
 		};
 	}
 }

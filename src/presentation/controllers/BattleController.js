@@ -58,7 +58,7 @@ class BattleController {
 
 	async create(req, res) {
 		try {
-			const useCase = new RegisterBattle(this.battleRepo, this.deckRepo, this.villainRepo, this.packageRepo);
+			const useCase = new RegisterBattle(this.battleRepo, this.deckRepo, this.villainRepo, this.packageRepo, this.userRepo);
 			const result = await useCase.execute(req.user.id);
 			res.status(201).json(result);
 		} catch (error) {
