@@ -20,7 +20,7 @@ class SummonFusion {
 
     if (!allowed) {
       BattleStorage.save(userId, newState);
-      return { success: true, state: newState, logs, actions };
+      return { success: true, state: newState, logs, actions, wasSuccess: false, resultCard: null };
     }
 
     const hand = newState.player.hand;
@@ -70,7 +70,14 @@ class SummonFusion {
     newState.player.canSummon = false;
 
     BattleStorage.save(userId, newState);
-    return { success: true, state: newState, logs: logs ?? [], actions: actions ?? [] };
+    return {
+      success: true,
+      state: newState,
+      logs: logs ?? [],
+      actions: actions ?? [],
+      wasSuccess: !!match,
+      resultCard: cardToSummon,
+    };
   }
 }
 

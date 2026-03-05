@@ -33,7 +33,7 @@ class FusionController {
       }
 
       const useCase = new SummonFusion();
-      const { success, state, logs, actions } = await useCase.execute(
+      const { success, state, logs, actions, wasSuccess, resultCard } = await useCase.execute(
         req.user.id,
         handIndices,
         position,
@@ -45,6 +45,8 @@ class FusionController {
         state: toClientState(state),
         logs,
         actions,
+        wasSuccess,
+        resultCard,
       });
     } catch (error) {
       res.status(400).json({ error: error.message });
