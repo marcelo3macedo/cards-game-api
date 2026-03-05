@@ -1,4 +1,5 @@
 const BattleHistoryModel = require("../db/models/BattleHistory");
+const PackageModel = require("../db/models/Package");
 const VillainModel = require("../db/models/Villain");
 
 class SequelizeBattleRepository {
@@ -9,8 +10,11 @@ class SequelizeBattleRepository {
 	async findByUserId(userId) {
 		return await BattleHistoryModel.findAll({
 			where: { userId },
-			include: [{ model: VillainModel, as: "villain" }],
-			order: [["date", "DESC"]], // Mais recentes primeiro
+			include: [
+				{ model: VillainModel, as: "villain" },
+				{ model: PackageModel, as: "package" },
+			],
+			order: [["date", "DESC"]],
 		});
 	}
 }

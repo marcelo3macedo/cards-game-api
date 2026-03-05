@@ -1,5 +1,6 @@
 const { Op } = require("sequelize");
 const CardModel = require("../db/models/Card");
+const sequelize = require("#infrastructure/db/sequelize");
 
 class SequelizeCardRepository {
 	async findAll(filters = {}) {
@@ -14,6 +15,13 @@ class SequelizeCardRepository {
 		}
 
 		return await CardModel.findAll({ where });
+	}
+
+	async findRandom(count) {
+		return await CardModel.findAll({
+			order: sequelize.literal("RAND()"),
+			limit: count,
+		});
 	}
 }
 

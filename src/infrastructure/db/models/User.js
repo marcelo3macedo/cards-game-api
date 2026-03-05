@@ -38,6 +38,10 @@ const User = sequelize.define(
 			type: DataTypes.INTEGER,
 			defaultValue: 0,
 		},
+		coins: {
+			type: DataTypes.INTEGER,
+			defaultValue: 100,
+		},
 	},
 	{
 		tableName: "users",
