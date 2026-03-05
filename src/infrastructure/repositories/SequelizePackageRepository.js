@@ -1,6 +1,7 @@
 const PackageModel = require("../db/models/Package");
 const VillainModel = require("../db/models/Villain");
 const StoreModel = require("../db/models/Store");
+const CardModel = require("../db/models/Card");
 
 class SequelizePackageRepository {
 	async create(packageData) {
@@ -25,6 +26,31 @@ class SequelizePackageRepository {
 			],
 			order: [["createdAt", "DESC"]],
 		});
+	}
+
+	async findByIdWithCards(id) {
+		const pkg = await PackageModel.findByPk(id, {
+			include: [
+				{ model: VillainModel, as: "villain" },
+				{ model: StoreModel, as: "store" },
+			],
+		});
+		if (!pkg) return null;
+
+		const plainPkg = pkg.get({ plain: true });
+		const cardIds = plainPkg.cards || [];
+		const cards = cardIds.length > 0
+			? await CardModel.findAll({ where: { id: cardIds } })
+			: [];
+
+		return {
+			...plainPkg,
+			cardsData: cards.map(c => ({ card: c.get({ plain: true }) })),
+		};
+	}
+
+	async deleteById(id) {
+		await PackageModel.destroy({ where: { id } });
 	}
 }
 

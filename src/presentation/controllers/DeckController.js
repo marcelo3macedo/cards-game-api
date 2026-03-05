@@ -25,6 +25,19 @@ class DeckController {
         }
     }
 
+    async update(req, res) {
+        try {
+            const { cardIds } = req.body;
+            if (!Array.isArray(cardIds)) {
+                return res.status(400).json({ error: "cardIds deve ser um array." });
+            }
+            const result = await this.manageDeck.updateMainDeck(req.user.id, cardIds);
+            res.json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    }
+
     async shuffle(req, res) {
         try {
             const shuffledDeck = await this.manageDeck.shuffleAndGetMain(req.params.userId);
