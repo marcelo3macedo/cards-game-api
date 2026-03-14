@@ -34,26 +34,19 @@ class SummonFusion {
     const match = resolveRecipe(cardIds);
 
     let cardToSummon;
-    let usedIndices;
 
     if (match) {
       const fusionCard = await CardModel.findByPk(match.resultId, { raw: true });
       if (!fusionCard) throw new Error("Fusion result card not found in database.");
 
       cardToSummon = fusionCard;
-      // Remove material cards from hand — sort descending to avoid index shifts
-      usedIndices = match.usedIndices
-        .map((i) => handIndices[i])
-        .sort((a, b) => b - a);
     } else {
       // No fusion: summon the last card from the selection as fallback
-      const fallbackIndex = handIndices[handIndices.length - 1];
-      cardToSummon = hand[fallbackIndex];
-      usedIndices = [fallbackIndex];
+      cardToSummon = hand[handIndices[handIndices.length - 1]];
     }
 
-    // Remove used cards from hand (descending order)
-    usedIndices.sort((a, b) => b - a).forEach((i) => {
+    // Remove all selected cards from hand (descending order to avoid index shifts)
+    [...handIndices].sort((a, b) => b - a).forEach((i) => {
       hand.splice(i, 1);
     });
 

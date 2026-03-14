@@ -13,6 +13,7 @@ const battleEngineRoutes = require("./src/presentation/routes/BattleEngineRoutes
 const storeRoutes = require("./src/presentation/routes/StoreRoutes");
 const packageRoutes = require("./src/presentation/routes/PackageRoutes");
 const storePackageRoutes = require("./src/presentation/routes/StorePackageRoutes");
+const chapterRoutes = require("./src/presentation/routes/ChapterRoutes");
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use("/battle-engine", battleEngineRoutes);
 app.use("/stores", storeRoutes);
 app.use("/packages", packageRoutes);
 app.use("/store-packages", storePackageRoutes);
+app.use("/chapters", chapterRoutes);
 
 app.use((err, req, res, next) => {
     console.error(err.stack);

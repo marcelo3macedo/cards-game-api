@@ -25,7 +25,7 @@ const Deck = sequelize.define(
 			references: { model: Card, key: "id" },
 		},
 		type: {
-			type: DataTypes.ENUM("main", "library"),
+			type: DataTypes.ENUM("main", "library", "initial"),
 			allowNull: false,
 			defaultValue: "library",
 		},
