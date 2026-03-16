@@ -186,12 +186,52 @@ class BattleAction {
 		state.pendingAction = {
 			cardHandIndex: cardIndex,
 			effectId: card.id,
-			targetType: result.targetType
+			effectScript: card.effectScript,
+			origin,
+			targetType: result.targetType,
 		};
 		BattleStorage.save(playerId, state);
 
-        return { success: true, state, logs: result.logs, actions: result.actions };
+        return {
+            success: true,
+            state,
+            logs: result.logs,
+            actions: result.actions,
+            status: "WAITING_SELECTION",
+            waitingSelection: {
+                targetType: result.targetType,
+                allowedElements: result.allowedElements || [],
+                message: result.message || "",
+            },
+        };
     }
+
+	executeEffect(playerId, selection) {
+		const state = this.getState(playerId);
+
+		if (!state.pendingAction) throw new Error("Nenhuma ação pendente.");
+
+		const { cardHandIndex, effectScript, origin } = state.pendingAction;
+		const exec = state.player;
+
+		const card = origin === "hand"
+			? exec.hand[cardHandIndex]
+			: exec.spells[cardHandIndex]?.card;
+
+		if (!card) throw new Error("Carta não encontrada na posição pendente.");
+
+		const effectPlugin = EffectRegistry.getEffect(effectScript || card.effectScript);
+		if (!effectPlugin?.execute) throw new Error("Plugin sem método execute.");
+
+		const result = effectPlugin.execute(
+			{ state, card, cardIndex: cardHandIndex, origin },
+			selection
+		);
+
+		state.pendingAction = null;
+		BattleStorage.save(playerId, result.state);
+		return this.formatStateForClient(result.state);
+	}
 }
 
 module.exports = BattleAction;
