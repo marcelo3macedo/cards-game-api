@@ -18,7 +18,7 @@ const chapterRoutes = require("./src/presentation/routes/ChapterRoutes");
 const app = express();
 
 app.use(cors({
-    origin: ["https://card-game.professoraantenada.com.br", "http://localhost:6006", "https://cardgame.alemdoscript.com.br"] ,
+    origin: ["https://card-game.professoraantenada.com.br", "http://localhost:6006", "https://cardgame.alemdoscript.com.br", "https://cardgame-qa.alemdoscript.com.br"] ,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
