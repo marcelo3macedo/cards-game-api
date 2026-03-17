@@ -2,6 +2,8 @@ const CreateUser = require("#core/use-cases/user/CreateUser");
 const GetUserByToken = require("#core/use-cases/user/GetUserByToken");
 const SequelizeDeckRepository = require("#infrastructure/repositories/SequelizeDeckRepository");
 const SequelizeUserRepository = require("#infrastructure/repositories/SequelizeUserRepository");
+const BattleHistory = require("#infrastructure/db/models/BattleHistory");
+const Villain = require("#infrastructure/db/models/Villain");
 
 class UserController {
 	constructor() {
@@ -15,6 +17,19 @@ class UserController {
         try {
             const user = await this.getUserByToken.execute(req.token);
             res.json(user);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getHistory(req, res) {
+        try {
+            const history = await BattleHistory.findAll({
+                where: { userId: req.user.id },
+                include: [{ model: Villain, as: "villain", attributes: ["id", "name", "profilePictureUrl"] }],
+                order: [["date", "DESC"]],
+            });
+            res.json(history);
         } catch (error) {
             res.status(400).json({ error: error.message });
         }
