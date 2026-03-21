@@ -9,7 +9,8 @@ class VillainController {
 
     async all(req, res) {
         try {
-            const villains = await this.listVillains.execute();
+            const userId = req.user?.id ?? null;
+            const villains = await this.listVillains.execute(userId);
             res.json(villains);
         } catch (error) {
             res.status(500).json({ error: error.message });

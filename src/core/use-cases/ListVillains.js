@@ -3,9 +3,8 @@ class ListVillains {
 		this.villainRepository = villainRepository;
 	}
 
-	async execute() {
-		// Aqui poderíamos adicionar lógica para ordenar por level, por exemplo
-		return await this.villainRepository.findAll();
+	async execute(userId) {
+		return await this.villainRepository.findAll(userId);
 	}
 }
 
