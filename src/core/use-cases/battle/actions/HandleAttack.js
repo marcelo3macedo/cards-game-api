@@ -27,7 +27,7 @@ class HandleAttack {
         const validEnemies = enemy.field.filter(item => item !== null);
 		if (targetIdx === null || validEnemies.length === 0) {
             const { logs, actions } = this._handleDirectAttack(attacker, enemy);
-            return { success: true, state, logs, actions };
+            return { success: true, state, logs, actions: this._enrichActionsWithHp(actions, state) };
         }
 
         if (!enemy.field[targetIdx]) {
@@ -38,7 +38,7 @@ class HandleAttack {
         const target = prepareCombatant(enemy.field[targetIdx], environment);
         const result = this._handleMonsterBattle(actor, enemy, attacker, target, attackerIdx, targetIdx);
 
-        return { success: true, state, logs: result.logs, actions: result.actions };
+        return { success: true, state, logs: result.logs, actions: this._enrichActionsWithHp(result.actions, state) };
     }
 
     _handleDirectAttack(attacker, enemy) {
@@ -159,6 +159,14 @@ class HandleAttack {
             logs,
             actions
         };
+    }
+    _enrichActionsWithHp(actions, state) {
+        return actions.map(a => {
+            if (a.type === 'attack') {
+                return { ...a, data: { ...a.data, playerHp: state.player.hp, opponentHp: state.opponent.hp } };
+            }
+            return a;
+        });
     }
 }
 
