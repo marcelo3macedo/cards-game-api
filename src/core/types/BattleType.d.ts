@@ -62,6 +62,8 @@ export interface BattleState {
         cardHandIndex: number;
         effectId: string;
         targetType: string;
+        effectScript: any;
+        origin: string;
     };
 }
 

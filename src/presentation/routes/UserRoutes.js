@@ -7,5 +7,6 @@ const userController = new UserController();
 
 router.post("/", (req, res) => userController.create(req, res));
 router.get("/me", authMiddleware, (req, res) => userController.me(req, res));
+router.get("/me/history", authMiddleware, (req, res) => userController.getHistory(req, res));
 
 module.exports = router;
